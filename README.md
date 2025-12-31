@@ -1,25 +1,43 @@
-# React + Vite
+📌 Project Overview
+This frontend application provides a modern, responsive chat interface that allows users to:
+•	Register and log in
+•	View other users
+•	Send and receive messages in real time
+•	See online/offline status
+•	View typing indicators
+•	Track message delivery and read receipts
+The frontend communicates with a Node.js + Express + MongoDB backend deployed on Render, using REST APIs and Socket.IO.
+________________________________________
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🛠️ Tech Stack
+•	React 18
+•	Vite
+•	Axios
+•	Socket.IO Client
+•	Tailwind CSS
+•	Netlify (Deployment)
 
-Currently, two official plugins are available:
+⚙️ Prerequisites
+Make sure you have the following installed:
+•	Node.js (v18 or higher)
+•	npm (v9 or higher)
+•	A running backend server (Render or local)
+🔌 Real-Time Features (Socket.IO)
+The app uses Socket.IO Client for real-time communication.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Supported Features:
+•	User online/offline tracking
+•	Instant message delivery
+•	Typing indicators
+•	Message delivered ✓✓
+•	Message seen ✓✓ (green)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-
-cd CHATAPP FE
-npm install
-npm start
-
-cd frontend/chats
-npm install
-npm run dev
+Key Features
+•	🔐 User authentication (login & register)
+•	💬 One-to-one real-time chat
+•	🟢 Online status & last seen
+•	✍️ Typing indicator
+•	✅ Message delivery & read receipts
+•	🔄 Auto-scroll chat window
+•	🚪 Logout functionality
+•	📱 Responsive UI
