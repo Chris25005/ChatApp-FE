@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 
+const API_URL = "https://chatapp-be-lwx3.onrender.com";
+
 function Auth({ setUser }) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
@@ -13,20 +15,16 @@ function Auth({ setUser }) {
       setLoading(true);
 
       if (isLogin) {
-
         const res = await axios.post(
-          "http://localhost:1005/api/auth/login",
+          `${API_URL}/api/auth/login`,
           { phone, password }
         );
 
-     
         localStorage.setItem("user", JSON.stringify(res.data.user));
         setUser(res.data.user);
-
       } else {
-      
         await axios.post(
-          "http://localhost:1005/api/auth/register",
+          `${API_URL}/api/auth/register`,
           { name, phone, password }
         );
 
@@ -50,10 +48,9 @@ function Auth({ setUser }) {
           {isLogin ? "Login" : "Register"}
         </h2>
 
-        
         {!isLogin && (
           <input
-            className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-2 rounded placeholder-green-600"
+            className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-2 rounded"
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -61,7 +58,7 @@ function Auth({ setUser }) {
         )}
 
         <input
-          className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-2 rounded placeholder-green-600"
+          className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-2 rounded"
           placeholder="Phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -69,7 +66,7 @@ function Auth({ setUser }) {
 
         <input
           type="password"
-          className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-4 rounded placeholder-green-600"
+          className="border border-green-600 bg-gray-800 text-green-400 p-2 w-full mb-4 rounded"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -78,13 +75,13 @@ function Auth({ setUser }) {
         <button
           onClick={submit}
           disabled={loading}
-          className="bg-green-600 hover:bg-green-500 text-black font-bold w-full py-2 rounded disabled:opacity-60 transition-colors"
+          className="bg-green-600 hover:bg-green-500 text-black font-bold w-full py-2 rounded"
         >
           {loading ? "Please wait..." : isLogin ? "Login" : "Register"}
         </button>
 
         <p
-          className="text-center text-green-400 hover:text-green-300 mt-3 cursor-pointer transition-colors"
+          className="text-center text-green-400 mt-3 cursor-pointer"
           onClick={() => setIsLogin(!isLogin)}
         >
           {isLogin
