@@ -6,17 +6,18 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-    if (savedUser && savedUser._id) {
-      setUser(savedUser);
+    try {
+      const savedUser = JSON.parse(localStorage.getItem("user"));
+      if (savedUser?._id) {
+        setUser(savedUser);
+      }
+    } catch {
+      localStorage.removeItem("user");
     }
   }, []);
 
-  if (!user) {
-    return <Auth setUser={setUser} />;
-  }
+  if (!user) return <Auth setUser={setUser} />;
 
-  
   return <WhatsApp />;
 }
 

@@ -2,8 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const API_URL = "https://chatapp-be-lwx3.onrender.com";
-
 function WhatsApp() {
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -19,45 +17,57 @@ function WhatsApp() {
 
   const me = JSON.parse(localStorage.getItem("user"));
 
-  const formatTime = (date) =>
-    new Date(date).toLocaleTimeString([], {
+  const formatTime = (date) => {
+    if (!date) return "";
+    return new Date(date).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
 
   const formatLastSeen = (date) => {
     if (!date) return "";
+
     const d = new Date(date);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
+
     return isToday
-      ? `last seen today at ${formatTime(d)}`
-      : `last seen on ${d.toLocaleDateString()} at ${formatTime(d)}`;
+      ? `last seen today at ${d.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`
+      : `last seen on ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
   };
 
+
   useEffect(() => {
-    selectedUserRef.current = selectedUser?._id || null;
+    selectedUserRef.current = selectedUser?._id;
   }, [selectedUser]);
+
 
   const logout = () => {
     localStorage.removeItem("user");
     window.location.reload();
   };
 
-  /* ---------- SOCKET ---------- */
   useEffect(() => {
     if (!me?._id) return;
 
-    socketRef.current = io(API_URL, {
-      transports: ["polling", "websocket"], // REQUIRED for Render
-      forceNew: true,
+    socketRef.current = io("http://localhost:1005", {
+      transports: ["websocket"],
     });
 
     socketRef.current.emit("user-online", me._id);
+
     socketRef.current.on("online-users", setOnlineUsers);
 
     socketRef.current.on("receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
+
       if (selectedUserRef.current === msg.senderId) {
         socketRef.current.emit("messageDelivered", {
           messageId: msg._id,
@@ -91,22 +101,24 @@ function WhatsApp() {
     return () => socketRef.current.disconnect();
   }, [me?._id]);
 
-  /* ---------- USERS ---------- */
   useEffect(() => {
     if (!me?._id) return;
-    axios.get(`${API_URL}/api/users`).then((res) => {
+
+    axios.get("http://localhost:1005/api/users").then((res) => {
       setUsers(res.data.filter((u) => u._id !== me._id));
     });
   }, [me?._id]);
 
-  /* ---------- MESSAGES ---------- */
   useEffect(() => {
     if (!selectedUser) return;
 
     axios
-      .get(`${API_URL}/api/messages/${me._id}/${selectedUser._id}`)
+      .get(
+        `http://localhost:1005/api/messages/${me._id}/${selectedUser._id}`
+      )
       .then((res) => {
         setMessages(res.data);
+
         const unseenIds = res.data
           .filter(
             (m) =>
@@ -125,29 +137,34 @@ function WhatsApp() {
     setTyping(false);
   }, [selectedUser, me?._id]);
 
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+
   const sendMessage = async () => {
     if (!text.trim() || !selectedUser) return;
 
-    const res = await axios.post(`${API_URL}/api/send`, {
+    const res = await axios.post("http://localhost:1005/api/send", {
       senderId: me._id,
       receiverId: selectedUser._id,
       text,
     });
 
-    setMessages((prev) => [...prev, res.data]);
+    setMessages((prev) => [...prev, { ...res.data, status: "sent" }]);
+
     socketRef.current.emit("sendMessage", res.data);
     socketRef.current.emit("stopTyping", {
       receiverId: selectedUser._id,
     });
+
     setText("");
   };
 
   const handleTyping = (e) => {
     setText(e.target.value);
+
     socketRef.current.emit("typing", {
       senderId: me._id,
       receiverId: selectedUser?._id,
@@ -158,7 +175,7 @@ function WhatsApp() {
       socketRef.current.emit("stopTyping", {
         receiverId: selectedUser?._id,
       });
-    }, 800);
+    }, 1000);
   };
 
   const renderTicks = (msg) => {
@@ -170,32 +187,108 @@ function WhatsApp() {
 
   return (
     <div className="h-screen flex bg-black">
+    
       <div className="w-1/3 bg-gray-900 border-r border-green-600">
-        <div className="bg-green-600 text-black p-4 flex justify-between">
+        <div className="bg-green-600 text-black p-4 font-semibold flex justify-between items-center">
           <span>WhatsApp</span>
-          <button onClick={logout} className="bg-red-600 px-2 py-1 text-xs rounded">
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-sm">{me?.name}</span>
+            <button
+              onClick={logout}
+              className="text-xs bg-red-600 hover:bg-red-500 px-2 py-1 rounded transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
-        {users.map((u) => (
+        {users.map((user) => (
           <div
-            key={u._id}
-            onClick={() => setSelectedUser(u)}
-            className="p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-800"
+            key={user._id}
+            onClick={() => setSelectedUser(user)}
+            className={`p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors ${
+              selectedUser?._id === user._id ? "bg-gray-800 border-l-4 border-l-green-600" : ""
+            }`}
           >
-            <div className="text-green-400">{u.name}</div>
+            <div className="font-medium text-green-400">{user.name}</div>
             <div className="text-xs text-green-600">
-              {onlineUsers.includes(u._id)
+              {onlineUsers.includes(user._id)
                 ? "online"
-                : formatLastSeen(u.lastSeen)}
+                : formatLastSeen(user.lastSeen)}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex-1 flex items-center justify-center text-green-600">
-        Select a chat to start messaging
+      
+      <div className="flex-1 flex flex-col bg-black">
+        {selectedUser ? (
+          <>
+            <div className="bg-gray-900 p-4 border-b border-green-600">
+              <div className="font-semibold text-green-400">{selectedUser.name}</div>
+
+              {onlineUsers.includes(selectedUser._id) ? (
+                <div className="text-xs text-green-400">online</div>
+              ) : (
+                <div className="text-xs text-green-600">
+                  {formatLastSeen(selectedUser.lastSeen)}
+                </div>
+              )}
+
+              {typing && (
+                <div className="text-xs text-green-300">typing...</div>
+              )}
+            </div>
+
+            <div className="flex-1 p-4 overflow-y-auto space-y-2">
+              {messages.map((msg) => (
+                <div
+                  key={msg._id}
+                  className={`flex ${
+                    msg.senderId === me._id
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`px-3 py-2 rounded-lg max-w-[60%] ${
+                      msg.senderId === me._id
+                        ? "bg-green-600 text-black"
+                        : "bg-gray-800 text-green-400 border border-green-600"
+                    }`}
+                  >
+                    <div>{msg.text}</div>
+                    <div className={`flex justify-end items-center gap-1 text-[10px] mt-1 ${msg.senderId === me._id ? "text-black" : "text-green-500"}`}>
+                      <span>{formatTime(msg.createdAt)}</span>
+                      {msg.senderId === me._id && renderTicks(msg)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={bottomRef} />
+            </div>
+
+            <div className="p-3 bg-gray-900 flex border-t border-green-600">
+              <input
+                value={text}
+                onChange={handleTyping}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                className="flex-1 px-4 py-2 rounded-full outline-none bg-gray-800 text-green-400 placeholder-green-600 border border-green-600"
+                placeholder="Type a message"
+              />
+              <button
+                onClick={sendMessage}
+                className="ml-2 bg-green-600 hover:bg-green-500 text-black px-4 py-2 rounded-full font-bold transition-colors"
+              >
+                ➤
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-green-600">
+            Select a chat to start messaging
+          </div>
+        )}
       </div>
     </div>
   );

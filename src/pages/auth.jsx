@@ -1,7 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
-
-const API_URL = "https://chatapp-be-lwx3.onrender.com";
+import api from "../config/api";
 
 function Auth({ setUser }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,31 +9,40 @@ function Auth({ setUser }) {
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
+    if (loading) return;
+
     try {
       setLoading(true);
 
       if (isLogin) {
-        const res = await axios.post(
-          `${API_URL}/api/auth/login`,
-          { phone, password }
-        );
+        const res = await api.post("/api/auth/login", {
+          phone,
+          password,
+        });
 
         localStorage.setItem("user", JSON.stringify(res.data.user));
         setUser(res.data.user);
       } else {
-        await axios.post(
-          `${API_URL}/api/auth/register`,
-          { name, phone, password }
-        );
+        await api.post("/api/auth/register", {
+          name,
+          phone,
+          password,
+        });
 
-        alert("Registered successfully. Please login.");
+        alert("Registration successful. Please login.");
         setIsLogin(true);
         setName("");
         setPhone("");
         setPassword("");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Authentication failed");
+      console.error("AUTH ERROR FULL:", err?.response?.data || err.message);
+
+      alert(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Backend server error (check Render logs)"
+      );
     } finally {
       setLoading(false);
     }
