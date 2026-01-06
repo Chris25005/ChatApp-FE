@@ -4,7 +4,6 @@ import { io } from "socket.io-client";
 
 /* 🔁 CHANGE THIS FOR PROD */
 const API_BASE = "https://chatapp-be-1-jety.onrender.com";
-// const API_BASE = "https://chatapp-be-1-jety.onrender.com";
 
 function WhatsApp() {
   const me = JSON.parse(localStorage.getItem("user"));
